@@ -100,11 +100,6 @@ bool repeating_timer_callback(struct repeating_timer *t)
     bool estado_led_verde = gpio_get(pino_led_verde);
     joystick_dados->botao = gpio_get(pino_botao_joystick) == 0 ? !estado_led_verde : estado_led_verde; // 0 indica que o botão está pressionado.
 
-    pwm_set_gpio_level(pino_led_vermelho, joystick_dados->vry); // Atualiza o estado dos leds
-    pwm_set_gpio_level(pino_led_azul, joystick_dados->vrx); 
- 
-    gpio_put(pino_led_verde, joystick_dados->botao);
-    
 
     return true;
 }
