@@ -2,7 +2,9 @@
 #include "pico/stdlib.h"
 #include "ssd1306.h"
 #include "hardware/pwm.h"
+#include "hardware/adc.h"
 #include "setup.h"
+#include <math.h>
 
 const uint pino_led_vermelho = 13;
 const uint pino_led_azul = 12;
@@ -21,6 +23,7 @@ typedef struct joystick_t {
     uint16_t vry;
     bool botao;
 } joystick_t;
+
 
 static joystick_t joystick;
 
@@ -48,7 +51,7 @@ int main()
     gpio_set_irq_enabled_with_callback(pino_botao_a, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // botao A
 
     while (true) {
-        printf("Hello, world!\n");
+        printf("vrx: %d, vry: %d, botao: %d\n", joystick.vrx, joystick.vry, joystick.botao);
         sleep_ms(1000);
     }
 }
@@ -85,13 +88,22 @@ bool repeating_timer_callback(struct repeating_timer *t)
 
     joystick_t *joystick_dados = (joystick_t *)t->user_data;
 
-    adc_select_input(0);
-    joystick_dados->vrx = adc_read(); // Lê o valor do eixo X, de 0 a 4095.
-
     adc_select_input(1);
-    joystick_dados->vry = adc_read();       // Lê o valor do eixo Y, de 0 a 4095.
+    uint16_t vrx = fabs(adc_read() - 2048);
+    joystick_dados->vrx = vrx > 200 ? vrx : 0; // Lê o valor do eixo X
+
+    adc_select_input(0);
+    uint16_t vry = fabs(adc_read() - 2048);
+    joystick_dados->vry = vry > 200 ? vry : 0; // Lê o valor do eixo Y
+
+    bool estado_led_verde = gpio_get(pino_led_verde);
+    joystick_dados->botao = gpio_get(pino_botao_joystick) == 0 ? !estado_led_verde : estado_led_verde; // 0 indica que o botão está pressionado.
+
+    pwm_set_gpio_level(pino_led_vermelho, joystick_dados->vry);
+    pwm_set_gpio_level(pino_led_azul, joystick_dados->vrx);
+ 
+    gpio_put(pino_led_verde, joystick_dados->botao);
     
-    joystick_dados->botao= gpio_get(pino_botao_joystick) == 0; // 0 indica que o botão está pressionado.
 
     return true;
 }

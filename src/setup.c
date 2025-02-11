@@ -23,7 +23,7 @@ void setup_led_pwm(uint pino_led) {
     gpio_set_function(pino_led, GPIO_FUNC_PWM);  // Habilitar o pino GPIO como PWM = pwm_gpio_to_slice_num(pino);    // Obter o canal PWM da GPIO
     uint slice = pwm_gpio_to_slice_num(pino_led);  // Obter o canal PWM da GPIO
     pwm_set_clkdiv(slice, 16.f);           // Define o divisor de clock do PWM
-    pwm_set_wrap(slice, 4096);              // Define o valor de wrap (0 passos)
+    pwm_set_wrap(slice, 2048);              // Define o valor de wrap (0 passos)
     pwm_set_gpio_level(pino_led, 0);       // Define o Duty Cycle inicial (2,5%)
     pwm_set_enabled(slice, true);               // Habilita o canal PWM
 }
