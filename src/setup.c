@@ -3,6 +3,7 @@
 #include "setup.h"
 #include "hardware/i2c.h"
 #include "hardware/adc.h"
+#include "hardware/pwm.h"
 #include "ssd1306.h"
 #include "font.h"
 
@@ -57,7 +58,7 @@ void setup_botoes(uint pino_botao_a, uint pino_botao_b) {
 /*
 * Função para inicializar o ADC
 */
-void setup_adc(uint pino_vrx, uint pino_vry, uint pino_sw) {
+void setup_joystick(uint pino_vrx, uint pino_vry, uint pino_sw) {
     adc_init();
     adc_gpio_init(pino_vrx);
     adc_gpio_init(pino_vry);
