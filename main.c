@@ -15,6 +15,15 @@ const uint pino_botao_joystick = 22;
 
 ssd1306_t display; // variavel de controle do display
 
+
+typedef struct joystick_t {
+    uint16_t vrx;
+    uint16_t vry;
+    bool botao;
+} joystick_t;
+
+static joystick_t joystick;
+
 static volatile bool desligar_leds = false;
 
 bool repeating_timer_callback(struct repeating_timer *t); // prototipo da função para o timer
@@ -33,7 +42,11 @@ int main()
 
     stdio_init_all();
 
+    struct repeating_timer timer; 
+    add_repeating_timer_ms(100, repeating_timer_callback, &joystick, &timer); // timer para piscar os leds
+   
     gpio_set_irq_enabled_with_callback(pino_botao_a, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // botao A
+
     while (true) {
         printf("Hello, world!\n");
         sleep_ms(1000);
@@ -54,12 +67,31 @@ void gpio_irq_handler(uint gpio, uint32_t events)
         pwm_set_gpio_level(pino_led_azul, 0);
         gpio_put(pino_led_verde, 0);
     }
+    else {
+        pwm_set_gpio_level(pino_led_vermelho, joystick.vry);
+        pwm_set_gpio_level(pino_led_azul, joystick.vrx);
+        gpio_put(pino_led_verde, joystick.botao);
+    }
 
 }
 
 
 bool repeating_timer_callback(struct repeating_timer *t)
 {
-    // TODO: Implement this function
+
+    if (desligar_leds) {
+        return true;
+    }
+
+    joystick_t *joystick_dados = (joystick_t *)t->user_data;
+
+    adc_select_input(0);
+    joystick_dados->vrx = adc_read(); // Lê o valor do eixo X, de 0 a 4095.
+
+    adc_select_input(1);
+    joystick_dados->vry = adc_read();       // Lê o valor do eixo Y, de 0 a 4095.
+    
+    joystick_dados->botao= gpio_get(pino_botao_joystick) == 0; // 0 indica que o botão está pressionado.
+
     return true;
 }
