@@ -2,6 +2,7 @@
 #include "pico/stdlib.h"
 #include "setup.h"
 #include "hardware/i2c.h"
+#include "hardware/adc.h"
 #include "ssd1306.h"
 #include "font.h"
 
@@ -14,15 +15,28 @@
 #define IS_RGBW false
 
 /*
+* Função para inicializar o led com PWM
+*/
+void setup_led_pwm(uint pino_led) {
+
+    gpio_set_function(pino_led, GPIO_FUNC_PWM);  // Habilitar o pino GPIO como PWM = pwm_gpio_to_slice_num(pino);    // Obter o canal PWM da GPIO
+    uint slice = pwm_gpio_to_slice_num(pino_led);  // Obter o canal PWM da GPIO
+    pwm_set_clkdiv(slice, 16.f);           // Define o divisor de clock do PWM
+    pwm_set_wrap(slice, 4096);              // Define o valor de wrap (0 passos)
+    pwm_set_gpio_level(pino_led, 0);       // Define o Duty Cycle inicial (2,5%)
+    pwm_set_enabled(slice, true);               // Habilita o canal PWM
+}
+
+
+/*
 * Função para inicializar o led 
 */
 void setup_led(uint pino_led) {
-
     gpio_init(pino_led); // inicializando o pino
-    gpio_set_dir(pino_led, GPIO_OUT); // definindo como saida
-    gpio_put(pino_led, false); // deixando desligado inicialmente
-
+    gpio_set_dir(pino_led, GPIO_OUT); // definindo como saída
+    gpio_put(pino_led, 0); // desligando o led
 }
+
 
 
 /*
@@ -40,7 +54,21 @@ void setup_botoes(uint pino_botao_a, uint pino_botao_b) {
 
 }
 
+/*
+* Função para inicializar o ADC
+*/
+void setup_adc(uint pino_vrx, uint pino_vry, uint pino_sw) {
+    adc_init();
+    adc_gpio_init(pino_vrx);
+    adc_gpio_init(pino_vry);
+    gpio_init(pino_sw);
+    gpio_set_dir(pino_sw, GPIO_IN);
+    gpio_pull_up(pino_sw);
+}
 
+/*
+* Função para inicializar o display
+*/
 void setup_display() {
     
   // I2C Initialisation. Using it at 400Khz.
@@ -54,6 +82,9 @@ void setup_display() {
 
 }
 
+/*
+* Função para inicializar o display
+*/
 void init_display(ssd1306_t *ssd) {
     // Inicializa o display usando o ponteiro passado como argumento
     ssd1306_init(ssd, WIDTH, HEIGHT, false, endereco, I2C_PORT); 

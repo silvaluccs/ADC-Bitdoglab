@@ -62,7 +62,10 @@ target_include_directories(conversor_adc PRIVATE
 
 # Add any user requested libraries
 target_link_libraries(conversor_adc 
-        
+        hardware_adc
+        hardware_pwm
+        hardware_timer
+        hardware_i2c
         )
 
 pico_add_extra_outputs(conversor_adc)
