@@ -46,11 +46,14 @@ static joystick_t joystick; // variavel para armazenar os dados do joystick
 
 static volatile bool desligar_leds = false; // variavel para controlar o estado dos leds
 
-bool repeating_timer_callback(struct repeating_timer *t); // prototipo da função para o timer
+bool repeating_timer_callback_joystick(struct repeating_timer *t); // prototipo da função para o timer
+bool repeating_timer_callback_display(struct repeating_timer *t); // prototipo da função para o timer
+
 void gpio_irq_handler(uint gpio, uint32_t events); // prototipo da função para tratar a interrupção dos botoes
+
+
 void mapear_valores_display(uint16_t x, uint16_t y, Posicao *posicao);
 
-struct repeating_timer timer;
 
 ssd1306_t ssd; // variavel de controle do display
 
@@ -69,7 +72,11 @@ int main()
 
     stdio_init_all(); // inicializa a comunicação serial
 
-    add_repeating_timer_ms(100, repeating_timer_callback, &joystick, &timer); // timer para monitorar o estado do joystick
+    struct repeating_timer timer_joystick; // timer para monitorar o estado do joystick
+    add_repeating_timer_ms(100, repeating_timer_callback_joystick, &joystick, &timer_joystick); // timer para monitorar o estado do joystick
+
+    struct repeating_timer timer_display; // timer para monitorar o estado do display
+    add_repeating_timer_ms(10, repeating_timer_callback_display, &ssd, &timer_display); // timer para monitorar o estado do display
 
     gpio_set_irq_enabled_with_callback(pino_botao_a, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // botao A para desligar os leds
     gpio_set_irq_enabled_with_callback(pino_botao_joystick, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // botao A para desligar os leds
@@ -78,15 +85,7 @@ int main()
     ssd1306_send_data(&ssd);
 
     while (true) {
-        ssd1306_fill(&ssd, false); // Limpa o display
-
-        if (joystick.botao) {
-            ssd1306_rect(&ssd, 3, 3, 122, 58, true, false);
-        }
-
-        ssd1306_draw_char(&ssd, 'z', posicao.x, posicao.y);
-        printf("vrx: %d, vry: %d\n", posicao.x, posicao.y);
-        ssd1306_send_data(&ssd);
+        tight_loop_contents();
     }
 }
 
@@ -141,7 +140,24 @@ void gpio_irq_handler(uint gpio, uint32_t events)
 
 }
 
-bool repeating_timer_callback(struct repeating_timer *t)
+
+bool repeating_timer_callback_display(struct repeating_timer *t)
+{
+    ssd1306_fill(&ssd, false); // Limpa o display
+
+    if (joystick.botao) {
+        ssd1306_rect(&ssd, 3, 3, 122, 58, true, false);
+    }
+
+    ssd1306_draw_char(&ssd, 'z', posicao.x, posicao.y);
+    printf("vrx: %d, vry: %d\n", posicao.x, posicao.y);
+    ssd1306_send_data(&ssd);
+
+    return true;
+}
+
+
+bool repeating_timer_callback_joystick(struct repeating_timer *t)
 {
 
     joystick_t *joystick_dados = (joystick_t *)t->user_data;
