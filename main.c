@@ -43,6 +43,7 @@ static Posicao posicao;
 
 static joystick_t joystick; // variavel para armazenar os dados do joystick
 
+
 static volatile bool desligar_leds = false; // variavel para controlar o estado dos leds
 
 bool repeating_timer_callback_joystick(struct repeating_timer *t); // prototipo da função para o timer
@@ -75,13 +76,10 @@ int main()
     add_repeating_timer_ms(100, repeating_timer_callback_joystick, &joystick, &timer_joystick); // timer para monitorar o estado do joystick
 
     struct repeating_timer timer_display; // timer para monitorar o estado do display
-    add_repeating_timer_ms(100, repeating_timer_callback_display, &ssd, &timer_display); // timer para monitorar o estado do display
+    add_repeating_timer_ms(100, repeating_timer_callback_display, NULL, &timer_display); // timer para monitorar o estado do display
 
     gpio_set_irq_enabled_with_callback(pino_botao_a, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // botao A para desligar os leds
     gpio_set_irq_enabled_with_callback(pino_botao_joystick, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // botao A para desligar os leds
-
-    ssd1306_fill(&ssd, false); // Limpa o display
-    ssd1306_send_data(&ssd);
 
     while (true) {
         tight_loop_contents();
@@ -118,20 +116,15 @@ void gpio_irq_handler(uint gpio, uint32_t events)
     }
 }
 
+
 /*
 * Função para atualizar o display
 */
 bool repeating_timer_callback_display(struct repeating_timer *t)
 {
-    ssd1306_fill(&ssd, false); // Limpa o display
 
-    if (joystick.botao) {
-        ssd1306_rect(&ssd, 3, 3, 122, 58, true, false);
-    }
-
-    ssd1306_draw_char(&ssd, 'z', posicao.x, posicao.y);
-    printf("vrx: %d, vry: %d\n", posicao.x, posicao.y);
-    ssd1306_send_data(&ssd);
+    bool ativar_borda = joystick.botao; // verifica se o botao do joystick foi pressionado
+    controle_quadrado(&ssd, posicao.x, posicao.y, ativar_borda); // desenha o botao na posição do joystick
 
     return true;
 }
