@@ -85,7 +85,7 @@ int main()
         }
 
         ssd1306_draw_char(&ssd, 'z', posicao.x, posicao.y);
-        printf("vrx: %d, vry: %d\n", posicao.x, posicao.x);
+        printf("vrx: %d, vry: %d\n", posicao.x, posicao.y);
         ssd1306_send_data(&ssd);
     }
 }
@@ -179,14 +179,17 @@ bool repeating_timer_callback(struct repeating_timer *t)
 void mapear_valores_display(uint16_t x, uint16_t y, Posicao *posicao) {
 
     uint limite_x = joystick.botao ? 118 : 120;
-    uint limite_y = joystick.botao ? 58 : 64;
+    uint limite_y = joystick.botao ? 52 : 55;
 
     posicao->x = (x *limite_x) / 4096;
     posicao->y = (limite_y - (y * limite_y) / 4096);
 
     if (joystick.botao && posicao->x < 3) {
         posicao->x += 3;
-
+    }
+    
+    if (joystick.botao && posicao->y < 4) {
+        posicao->y = 4;
     }
 
 }
