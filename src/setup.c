@@ -13,8 +13,6 @@
 #define endereco 0x3C
 
 
-#define IS_RGBW false
-
 /*
 * Função para inicializar o led com PWM
 */

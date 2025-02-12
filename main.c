@@ -6,6 +6,16 @@
 #include "setup.h"
 #include <math.h>
 #include "debouce.h"
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "ssd1306.h"
+#include "font.h"
+#include "hardware/pwm.h"
+#include "hardware/adc.h"
+#include "setup.h"
+#include <math.h>
+#include "debouce.h"
+#include "hardware/i2c.h"
 
 const uint pino_led_vermelho = 13; // pino do led vermelho
 const uint pino_led_azul = 12; // pino do led azul
@@ -16,7 +26,6 @@ const uint pino_vrx = 27; // pino do eixo X do joystick
 const uint pino_vry = 26; // pino do eixo Y do joystick
 const uint pino_botao_joystick = 22; // pino do botão do joystick
 
-ssd1306_t display; // variavel de controle do display
 
 
 typedef struct joystick_t {
@@ -34,6 +43,9 @@ void gpio_irq_handler(uint gpio, uint32_t events); // prototipo da função para
 
 struct repeating_timer timer;
 
+ssd1306_t ssd; // variavel de controle do display
+
+
 int main()
 {
 
@@ -42,8 +54,9 @@ int main()
     setup_led(pino_led_verde); // configuração do led verde
     setup_botoes(pino_botao_a, pino_botao_b); // configuração dos botões
     setup_joystick(pino_vrx, pino_vry, pino_botao_joystick); // configuração do joystick
+   
     setup_display(); // configuração do display
-    init_display(&display); // inicializa o display
+    init_display(&ssd); // inicializa o display
 
     stdio_init_all(); // inicializa a comunicação serial
 
@@ -52,6 +65,8 @@ int main()
     gpio_set_irq_enabled_with_callback(pino_botao_a, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // botao A para desligar os leds
     gpio_set_irq_enabled_with_callback(pino_botao_joystick, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // botao A para desligar os leds
 
+    ssd1306_fill(&ssd, false); // Limpa o display
+    ssd1306_send_data(&ssd);
 
     while (true) {
         printf("vrx: %d, vry: %d, botao: %d\n", joystick.vrx, joystick.vry, joystick.botao);
@@ -77,7 +92,18 @@ void gpio_irq_handler(uint gpio, uint32_t events)
     if (gpio == pino_botao_joystick) {
         bool estado_led_verde = gpio_get(pino_led_verde);
         joystick.botao = !estado_led_verde;
-        gpio_put(pino_led_verde, joystick.botao);
+
+        if (joystick.botao) { // adiciona uma borda ao redor do display
+            gpio_put(pino_led_verde, 1);
+            ssd1306_rect(&ssd, 3, 3, 122, 58, true, false); // Desenha um retângulo
+        }
+        else { // remove a borda do display
+            gpio_put(pino_led_verde, 0);
+            ssd1306_fill(&ssd, false); // Limpa o display
+        }
+
+        ssd1306_send_data(&ssd);
+
         return;
     }
 
