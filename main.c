@@ -34,12 +34,21 @@ typedef struct joystick_t {
     bool botao;
 } joystick_t; // estrutura para armazenar os dados do joystick
 
+
+typedef struct posicao {
+    int x;
+    int y;
+} Posicao;
+
+static Posicao posicao;
+
 static joystick_t joystick; // variavel para armazenar os dados do joystick
 
 static volatile bool desligar_leds = false; // variavel para controlar o estado dos leds
 
 bool repeating_timer_callback(struct repeating_timer *t); // prototipo da função para o timer
 void gpio_irq_handler(uint gpio, uint32_t events); // prototipo da função para tratar a interrupção dos botoes
+void mapear_valores_display(uint16_t x, uint16_t y, Posicao *posicao);
 
 struct repeating_timer timer;
 
@@ -69,8 +78,15 @@ int main()
     ssd1306_send_data(&ssd);
 
     while (true) {
-        printf("vrx: %d, vry: %d, botao: %d\n", joystick.vrx, joystick.vry, joystick.botao);
-        sleep_ms(1000);
+        ssd1306_fill(&ssd, false); // Limpa o display
+
+        if (joystick.botao) {
+            ssd1306_rect(&ssd, 3, 3, 122, 58, true, false);
+        }
+
+        ssd1306_draw_char(&ssd, 'z', posicao.x, posicao.y);
+        printf("vrx: %d, vry: %d\n", posicao.x, posicao.x);
+        ssd1306_send_data(&ssd);
     }
 }
 
@@ -86,7 +102,6 @@ void gpio_irq_handler(uint gpio, uint32_t events)
     if (!debouce(&ultimo_tempo)) { // verifica se o botão foi pressionado recentemente
         return;
     }
-
 
     // verifica qual botão foi pressionado
     if (gpio == pino_botao_joystick) {
@@ -107,7 +122,6 @@ void gpio_irq_handler(uint gpio, uint32_t events)
         return;
     }
 
-
     // desliga os leds se o botão A for pressionado
 
     desligar_leds = !desligar_leds; // inverte o estado dos leds
@@ -127,26 +141,52 @@ void gpio_irq_handler(uint gpio, uint32_t events)
 
 }
 
-
 bool repeating_timer_callback(struct repeating_timer *t)
 {
- 
-    if (desligar_leds) { // verifica se os leds estão desligados
-        return true;
-    }
 
     joystick_t *joystick_dados = (joystick_t *)t->user_data;
 
     adc_select_input(1);
-    uint16_t vrx = fabs(adc_read() - 2048);
+
+    uint16_t vrx_original = adc_read();
+
+    uint16_t vrx = fabs(vrx_original - 2048);
+
     joystick_dados->vrx = vrx > 200 ? vrx : 0; // Lê o valor do eixo X
 
     adc_select_input(0);
-    uint16_t vry = fabs(adc_read() - 2048);
+
+    uint16_t vry_original = adc_read();
+
+
+    uint16_t vry = fabs(vry_original - 2048);
     joystick_dados->vry = vry > 200 ? vry : 0; // Lê o valor do eixo Y
+
+    mapear_valores_display(vrx_original,  vry_original, &posicao);
+
+    if (desligar_leds) { // verifica se os leds estão desligados
+        return true;
+    }
 
     pwm_set_gpio_level(pino_led_vermelho, joystick_dados->vry); // liga os leds com os valores do joystick
     pwm_set_gpio_level(pino_led_azul, joystick_dados->vrx);
 
     return true;
+}
+
+
+
+void mapear_valores_display(uint16_t x, uint16_t y, Posicao *posicao) {
+
+    uint limite_x = joystick.botao ? 118 : 120;
+    uint limite_y = joystick.botao ? 58 : 64;
+
+    posicao->x = (x *limite_x) / 4096;
+    posicao->y = (limite_y - (y * limite_y) / 4096);
+
+    if (joystick.botao && posicao->x < 3) {
+        posicao->x += 3;
+
+    }
+
 }
