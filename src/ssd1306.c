@@ -95,6 +95,20 @@ void ssd1306_fill(ssd1306_t *ssd, bool value) {
 }
 
 
+void controle_quadrado(ssd1306_t *ssd,  uint8_t x, uint8_t y, bool ativar_borda) {
+    
+    ssd1306_fill(ssd, false); // Limpa o display
+
+    if (ativar_borda) { // caso o botao do joystick seja pressionado, desenha a borda
+        ssd1306_rect(ssd, 3, 3, 122, 58, true, false);
+    }
+
+    ssd1306_draw_char(ssd, 'z', x, y); // Desenha o botao na posição (x, y)
+    ssd1306_send_data(ssd); // Envia os dados para o display
+
+
+}
+
 
 void ssd1306_rect(ssd1306_t *ssd, uint8_t top, uint8_t left, uint8_t width, uint8_t height, bool value, bool fill) {
   for (uint8_t x = left; x < left + width; ++x) {
