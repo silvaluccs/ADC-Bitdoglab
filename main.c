@@ -5,6 +5,7 @@
 #include "hardware/adc.h"
 #include "setup.h"
 #include <math.h>
+#include "debouce.h"
 
 const uint pino_led_vermelho = 13; // pino do led vermelho
 const uint pino_led_azul = 12; // pino do led azul
@@ -62,6 +63,13 @@ int main()
 */
 void gpio_irq_handler(uint gpio, uint32_t events)
 {
+
+    static uint32_t  ultimo_tempo = 0; 
+
+    if (!debouce(&ultimo_tempo)) { // verifica se o botão foi pressionado recentemente
+        return;
+    }
+
     desligar_leds = !desligar_leds; // inverte o estado dos leds
     
     if (desligar_leds) { // desliga os leds
