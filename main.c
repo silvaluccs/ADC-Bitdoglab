@@ -50,6 +50,8 @@ int main()
     add_repeating_timer_ms(100, repeating_timer_callback, &joystick, &timer); // timer para monitorar o estado do joystick
 
     gpio_set_irq_enabled_with_callback(pino_botao_a, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // botao A para desligar os leds
+    gpio_set_irq_enabled_with_callback(pino_botao_joystick, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler); // botao A para desligar os leds
+
 
     while (true) {
         printf("vrx: %d, vry: %d, botao: %d\n", joystick.vrx, joystick.vry, joystick.botao);
@@ -69,6 +71,18 @@ void gpio_irq_handler(uint gpio, uint32_t events)
     if (!debouce(&ultimo_tempo)) { // verifica se o botão foi pressionado recentemente
         return;
     }
+
+
+    // verifica qual botão foi pressionado
+    if (gpio == pino_botao_joystick) {
+        bool estado_led_verde = gpio_get(pino_led_verde);
+        joystick.botao = !estado_led_verde;
+        gpio_put(pino_led_verde, joystick.botao);
+        return;
+    }
+
+
+    // desliga os leds se o botão A for pressionado
 
     desligar_leds = !desligar_leds; // inverte o estado dos leds
     
@@ -105,9 +119,8 @@ bool repeating_timer_callback(struct repeating_timer *t)
     uint16_t vry = fabs(adc_read() - 2048);
     joystick_dados->vry = vry > 200 ? vry : 0; // Lê o valor do eixo Y
 
-    bool estado_led_verde = gpio_get(pino_led_verde);
-    joystick_dados->botao = gpio_get(pino_botao_joystick) == 0 ? !estado_led_verde : estado_led_verde; // 0 indica que o botão está pressionado.
-
+    pwm_set_gpio_level(pino_led_vermelho, joystick_dados->vry); // liga os leds com os valores do joystick
+    pwm_set_gpio_level(pino_led_azul, joystick_dados->vrx);
 
     return true;
 }
