@@ -94,9 +94,8 @@ void gpio_irq_handler(uint gpio, uint32_t events)
         desligar_leds = !desligar_leds;
 
         // desliga os leds ou liga com os valores do joystick
-        pwm_set_gpio_level(pino_led_vermelho, desligar_leds ? 0 : dados_leds.wrap_led_vermelho);
-        pwm_set_gpio_level(pino_led_azul, desligar_leds ? 0 : dados_leds.wrap_led_led_azul);
-        gpio_put(pino_led_verde, desligar_leds ? 0 : dados_leds.estado_led_verde);
+        pwm_set_gpio_level(pino_led_vermelho, desligar_leds ? 0 : dados_leds.wrap_led_led_azul);
+        pwm_set_gpio_level(pino_led_azul, desligar_leds ? 0 : dados_leds.wrap_led_vermelho);
 
         return;
     }
@@ -125,8 +124,8 @@ bool repeating_timer_callback_joystick(struct repeating_timer *t)
     controle_joystick(&dados_leds, &posicao_display, dados_leds.estado_led_verde); // monitora o estado do joystick
 
     if (!desligar_leds) { // verifica se os leds estão desligados
-        pwm_set_gpio_level(pino_led_vermelho, dados_leds.wrap_led_vermelho); // liga os leds com os valores do joystick
-        pwm_set_gpio_level(pino_led_azul, dados_leds.wrap_led_led_azul); // liga os leds com os valores do joystick
+        pwm_set_gpio_level(pino_led_azul, dados_leds.wrap_led_vermelho); // liga os leds com os valores do joystick
+        pwm_set_gpio_level(pino_led_vermelho, dados_leds.wrap_led_led_azul); // liga os leds com os valores do joystick
     }
 
     return true;
