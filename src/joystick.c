@@ -23,10 +23,10 @@ void controle_joystick(Dados_leds *dados_leds, Posicao_display *posicao_display,
 */
 static void mapear_valores_para_led(Dados_leds *dados_leds, uint16_t valor_eixo_X, uint16_t valor_eixo_Y) {
     uint16_t vrx = fabs(valor_eixo_X - 2048);
-    dados_leds->wrap_led_led_azul = vrx > 200 ? vrx : 0; // Configura o valor do led azul
+    dados_leds->wrap_led_vermelho = vrx > 200 ? vrx : 0; // Configura o valor do led azul
 
     uint16_t vry = fabs(valor_eixo_Y - 2048);
-    dados_leds->wrap_led_vermelho = vry > 200 ? vry : 0; // Lê o valor do eixo Y
+    dados_leds->wrap_led_led_azul = vry > 200 ? vry : 0; // Lê o valor do eixo Y
     
 }
 
