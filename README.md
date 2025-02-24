@@ -2,9 +2,6 @@
 
 Este projeto utiliza a Raspberry Pi Pico para controlar LEDs RGB, um display OLED SSD1306 e um joystick analógico. O código implementa leitura de ADC, debounce para botões e exibição de informações no display OLED.
 
-## link do vídeo
-https://drive.google.com/file/d/1cvIYvfgP0vqsqz4nYSDhRu0mE2trC58F/view?usp=drive_link
-
 ## Bibliotecas Utilizadas
 
 O projeto usa as seguintes bibliotecas e arquivos:
